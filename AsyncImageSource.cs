@@ -43,7 +43,7 @@ public class AsyncImageSource
   {
 
     var sourceInfo = new obs_source_info();
-    fixed (byte* id = Encoding.UTF8.GetBytes("xAsyncImageSource"))
+    fixed (byte* id = Encoding.UTF8.GetBytes(Module.ModuleName))
     {
       sourceInfo.id = (sbyte*)id;
       sourceInfo.type = obs_source_type.OBS_SOURCE_TYPE_INPUT;
@@ -126,7 +126,7 @@ public class AsyncImageSource
   static unsafe sbyte* image_source_get_name(void* data)
   {
     Module.Log("image_source_get_name called", ObsLogLevel.Debug);
-    fixed (byte* logMessagePtr = Encoding.UTF8.GetBytes("Image (Async)"))
+    fixed (byte* logMessagePtr = "Image (Async)"u8)
       return (sbyte*)logMessagePtr;
   }
   static unsafe void image_source_load(image_source* context)
@@ -216,9 +216,9 @@ public class AsyncImageSource
     Module.Log("image_source_update called", ObsLogLevel.Debug);
     var context = (image_source*)data;
     fixed (byte*
-      propertyFileIdentifier = Encoding.UTF8.GetBytes("file"),
-      propertyUnloadIdentifier = Encoding.UTF8.GetBytes("unload"),
-      propertyLinearAlphaIdentifier = Encoding.UTF8.GetBytes("linear_alpha")
+      propertyFileIdentifier = "file"u8,
+      propertyUnloadIdentifier = "unload"u8,
+      propertyLinearAlphaIdentifier = "linear_alpha"u8
     )
     {
       var file = ObsData.obs_data_get_string(settings, (sbyte*)propertyFileIdentifier);
@@ -244,8 +244,8 @@ public class AsyncImageSource
   {
     Module.Log("image_source_get_defaults called", ObsLogLevel.Debug);
     fixed (byte*
-      propertyUnloadIdentifier = Encoding.UTF8.GetBytes("unload"),
-      propertyLinearAlphaIdentifier = Encoding.UTF8.GetBytes("linear_alpha")
+      propertyUnloadIdentifier = "unload"u8,
+      propertyLinearAlphaIdentifier = "linear_alpha"u8
     )
     {
       ObsData.obs_data_set_default_bool(settings, (sbyte*)propertyUnloadIdentifier, Convert.ToByte(false));
@@ -372,7 +372,7 @@ public class AsyncImageSource
     ObsGraphics.gs_blend_state_push();
     ObsGraphics.gs_blend_function(gs_blend_type.GS_BLEND_ONE, gs_blend_type.GS_BLEND_INVSRCALPHA);
 
-    fixed (byte* imageParam = Encoding.UTF8.GetBytes("image"))
+    fixed (byte* imageParam = "image"u8)
       ObsGraphics.gs_effect_set_texture_srgb(ObsGraphics.gs_effect_get_param_by_name(effect, (sbyte*)imageParam), context->if4.image3.image2.image.texture);
 
     ObsGraphics.gs_draw_sprite(context->if4.image3.image2.image.texture, 0, context->if4.image3.image2.image.cx, context->if4.image3.image2.image.cy);
@@ -484,14 +484,14 @@ public class AsyncImageSource
     fixed (byte*
       path = Encoding.UTF8.GetBytes(defaultPath),
       propertyImageIdentifier = Module.ObsText("Image"),
-      propertyFileIdentifier = Encoding.UTF8.GetBytes("file"),
+      propertyFileIdentifier = "file"u8,
       propertyFileCaption = Module.ObsText("File"),
-      propertyUnloadIdentifier = Encoding.UTF8.GetBytes("unload"),
+      propertyUnloadIdentifier = "unload"u8,
       propertyUnloadCaption = Module.ObsText("UnloadWhenNotShowing"),
-      propertyLinearAlphaIdentifier = Encoding.UTF8.GetBytes("linear_alpha"),
+      propertyLinearAlphaIdentifier = "linear_alpha"u8,
       propertyLinearAlphaCaption = Module.ObsText("LinearAlpha"),
 #if WINDOWS
-      browseFileFilter = Encoding.UTF8.GetBytes(@"
+      browseFileFilter = @"
       All formats (*.bmp *.tga *.png *.jpeg *.jpg *.jxr *.gif *.psd *.webp);;
       BMP Files (*.bmp);;
       Targa Files (*.tga);;
@@ -502,9 +502,9 @@ public class AsyncImageSource
       PSD Files (*.psd);;
       WebP Files (*.webp);;
       All Files (*.*)
-      ")
+      "u8
 #else
-      browseFileFilter = Encoding.UTF8.GetBytes(@"
+      browseFileFilter = @"
       All formats (*.bmp *.tga *.png *.jpeg *.jpg *.gif *.psd *.webp);;
       BMP Files (*.bmp);;
       Targa Files (*.tga);;
@@ -514,7 +514,7 @@ public class AsyncImageSource
       PSD Files (*.psd);;
       WebP Files (*.webp);;
       All Files (*.*)
-      ")
+      "u8
 #endif
     )
     {
@@ -534,7 +534,7 @@ public class AsyncImageSource
     var s = (image_source*)src;
 
     var settings = Obs.obs_source_get_settings(s->source);
-    fixed (byte* propertyFileIdentifier = Encoding.UTF8.GetBytes("file"))
+    fixed (byte* propertyFileIdentifier = "file"u8)
       ObsData.obs_data_set_string(settings, (sbyte*)propertyFileIdentifier, new_path);
     Obs.obs_source_update(s->source, settings);
     ObsData.obs_data_release(settings);

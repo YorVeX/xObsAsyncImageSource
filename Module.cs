@@ -76,27 +76,6 @@ public static class Module
     return managedString;
   }
 
-  public static unsafe void ShowPropertyError(obs_properties* properties, string errorMessage)
-  {
-    Log("ShowPropertyError(): " + errorMessage, ObsLogLevel.Debug);
-    fixed (byte*
-      propertyErrorIdentifier = Encoding.UTF8.GetBytes("error_message"),
-      propertyErrorText = Encoding.UTF8.GetBytes(errorMessage)
-    )
-    {
-      var errorProperty = ObsProperties.obs_properties_get(properties, (sbyte*)propertyErrorIdentifier);
-      ObsProperties.obs_property_set_long_description(errorProperty, (sbyte*)propertyErrorText);
-
-      ObsProperties.obs_property_set_visible(errorProperty, Convert.ToByte(true));
-    }
-  }
-
-  public static unsafe void HidePropertyError(obs_properties* properties)
-  {
-    fixed (byte* propertyErrorIdentifier = Encoding.UTF8.GetBytes("error_message"))
-      ObsProperties.obs_property_set_visible(ObsProperties.obs_properties_get(properties, (sbyte*)propertyErrorIdentifier), Convert.ToByte(false));
-  }
-
   #endregion Helper methods
 
   #region OBS module API methods

@@ -155,8 +155,7 @@ public class AsyncImageSource
     var linear_alpha = context->linear_alpha;
     var file_timestamp = context->file_timestamp;
     var last_load = context->last_load;
-
-    new Thread(() =>
+    Task.Run(() =>
     {
       gs_image_file4 if4;
       Module.Log(string.Format("loading texture '{0}'", fileString), ObsLogLevel.Debug);
@@ -197,8 +196,7 @@ public class AsyncImageSource
       context->new_linear_alpha = linear_alpha;
       context->new_file_timestamp = file_timestamp;
       Obs.obs_leave_graphics();
-      
-    }).Start();
+    });
   }
 
   static unsafe void image_source_unload(image_source* context)

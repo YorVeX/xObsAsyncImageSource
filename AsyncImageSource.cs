@@ -5,12 +5,13 @@ namespace xAsyncImageSource;
 
 // original image source code this was derived from: https://github.com/obsproject/obs-studio/blob/29.0.2/plugins/image-source/image-source.c
 
-//TODO: X test automatic reload on file change
-//TODO: X test animated GIF
-//TODO: X test changing existing file between GIF and png
-//TODO: X test loading an invalid file
-//TODO: X test starting with missing file
-//TODO: test with 60 or even more FPS to make threaded conflicts more probable and be sure this is also stable
+// list of things to test when making bigger changes to this:
+//[ ] test automatic reload on file change
+//[ ] test animated GIF
+//[ ] test changing existing file between GIF and png
+//[ ] test loading an invalid file
+//[ ] test starting with missing file
+//[ ] test with 60 or even more FPS to make threaded conflicts more probable and be sure this is also stable
 
 public class AsyncImageSource
 {

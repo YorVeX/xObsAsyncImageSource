@@ -20,7 +20,7 @@ public static class Module
 
   const bool DebugLog = false; // enable for debug logging in OBS log
   const string DefaultLocale = "en-US";
-  public static string ModuleName = "xAsyncImageSource";
+  public static string ModuleName = "xObsAsyncImageSource";
   static string _locale = DefaultLocale;
   static unsafe obs_module* _obsModule = null;
   public static unsafe obs_module* ObsModule { get => _obsModule; }

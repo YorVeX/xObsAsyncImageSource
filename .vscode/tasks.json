@@ -37,6 +37,14 @@
             "problemMatcher": "$msCompile"
         },
         {
+            "label": "publish and release (win64)",
+            "type": "shell",
+            "command": ".\\release.cmd",
+            "dependsOrder": "sequence",
+            "dependsOn": ["publish (win64)"],
+            "problemMatcher": "$msCompile"
+        },
+        {
             "label": "watch",
             "command": "dotnet",
             "type": "process",

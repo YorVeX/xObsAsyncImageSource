@@ -43,18 +43,6 @@
             "dependsOrder": "sequence",
             "dependsOn": ["publish (win64)"],
             "problemMatcher": "$msCompile"
-        },
-        {
-            "label": "watch",
-            "command": "dotnet",
-            "type": "process",
-            "args": [
-                "watch",
-                "run",
-                "--project",
-                "${workspaceFolder}/xAsyncImageSource.csproj"
-            ],
-            "problemMatcher": "$msCompile"
         }
     ]
 }

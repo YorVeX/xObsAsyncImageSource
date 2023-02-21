@@ -4,8 +4,6 @@ using ObsInterop;
 namespace xAsyncImageSource;
 
 // original image source isn't probably changed to be threaded, see https://github.com/obsproject/obs-studio/issues/5444
-// for the slide show part of the original plugin it's a bit more complicated because also the number of loadable images is limited and that should be fixed, see https://github.com/obsproject/obs-studio/issues/3366
-// maybe we could simply port this 1:1 to C#: https://github.com/obsproject/rfcs/pull/17
 
 public enum ObsLogLevel : int
 {

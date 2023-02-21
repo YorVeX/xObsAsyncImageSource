@@ -186,16 +186,19 @@ public class AsyncImageSource
         gs_image_file4_free(&context->new_if4);
       }
       gs_image_file4_init_texture(&if4);
-      if (Convert.ToBoolean(if4.image3.image2.image.loaded))
-        Module.Log(string.Format("loaded texture '{0}' ({1} ms)", fileString, stopwatch.ElapsedMilliseconds), ObsLogLevel.Debug);
-      else
-        Module.Log(string.Format("failed to load texture '{0}'", fileString), ObsLogLevel.Warning);
       context->has_new_data = true;
       context->new_if4 = if4;
       context->new_file = file;
       context->new_persistent = persistent;
       context->new_linear_alpha = linear_alpha;
-      context->new_file_timestamp = file_timestamp;
+      if (Convert.ToBoolean(if4.image3.image2.image.loaded))
+      {
+        // another difference to the original: the timestamp is only updated if the load was successful, see the discussion at https://github.com/obsproject/obs-studio/issues/3011 for details
+        context->new_file_timestamp = file_timestamp;
+        Module.Log(string.Format("loaded texture '{0}' ({1} ms)", fileString, stopwatch.ElapsedMilliseconds), ObsLogLevel.Debug);
+      }
+      else
+        Module.Log(string.Format("failed to load texture '{0}'", fileString), ObsLogLevel.Warning);
       Obs.obs_leave_graphics();
     });
   }

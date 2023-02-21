@@ -25,6 +25,8 @@ This behavior will ensure a smooth transition from one image to another (as oppo
 
 If another image load is already triggered while the previous image load wasn't finished the previous load will be aborted in favor of the new one.
 
+If loading fails the async image source will keep on trying to load the image every second. This way if the file was locked during the last load attempt (e.g. happens when it is updated at the exact time the image source tries to read the file) it will be updated a second later (whereas the original image source [would never recover from this until the image file is updated once more](https://github.com/obsproject/obs-studio/issues/3275)).
+
 ### Usage scenarios
 You should prefer this image source over the original one whenever images are not only (re-)loaded once on startup of OBS but also during runtime. This is the case when:
 
@@ -88,8 +90,7 @@ To verify whether the conversion was actually applied click the plus icon to add
 
 ## For developers
 ### C#
-OBS Classic still had a [CLR Host Plugin](https://obsproject.com/forum/resources/clr-host-plugin.21/), but with OBS Studio writing plugins in C# wasn't possible anymore. This has changed as of recently.
-The catch about this plugin is that at its day of release (January 12, 2023) to my knowledge it's the first OBS Studio plugin ever written in C# that has some real-world use. The very first without real-world use was [this](https://github.com/kostya9/DotnetObsPluginWithNativeAOT) example plugin demonstrating the basic concept of writing an OBS Studio plugin using .NET 7 and NativeAOT.
+OBS Classic still had a [CLR Host Plugin](https://obsproject.com/forum/resources/clr-host-plugin.21/), but with OBS Studio writing plugins in C# wasn't possible anymore. This has changed as of recently, with the release of .NET 7 and NativeAOT it is possible to produce native code that can be linked with OBS.
 
 ### Building
 Refer to the [building instructions for my example plugin](https://github.com/YorVeX/ObsCSharpExample#building), they will also apply here.

@@ -3,7 +3,7 @@ using System.Text;
 using ObsInterop;
 namespace xAsyncImageSource;
 
-// original image source isn't probably changed to be threaded, see https://github.com/obsproject/obs-studio/issues/5444
+// original image source probably isn't changed to be threaded, see https://github.com/obsproject/obs-studio/issues/5444
 
 public enum ObsLogLevel : int
 {
@@ -74,6 +74,20 @@ public static class Module
     return managedString;
   }
 
+  /// <summary>Allocates memory for an unmanaged structure using OBS memory management and initializes all fields in it to zero.</summary>
+  /// <typeparam name="T">The type of the structure to allocate.</typeparam>
+  /// <returns>A pointer to the allocated memory.</returns>
+  /// <remarks>Use <see cref="ObsInterop.ObsBmem.bfree(void*)"/> to free the memory.</remarks>
+  public static unsafe T* bzalloc<T>() where T : unmanaged
+  {
+    int structSize = Marshal.SizeOf<T>();
+    var context = (T*)ObsBmem.bmalloc((nuint)structSize);
+    byte* structBytes = (byte*)context;
+    for (int index = 0; index < structSize; index++)
+      structBytes[index] = 0;
+    return context;
+  }
+  
   #endregion Helper methods
 
   #region OBS module API methods

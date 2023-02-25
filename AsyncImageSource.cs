@@ -28,7 +28,7 @@ public class AsyncImageSource
     public bool active;
     public bool restart_gif;
     public gs_image_file4 if4;
-    
+
     // extra fields needed for threaded loading
     public long last_load;
     public bool has_new_data;
@@ -42,7 +42,6 @@ public class AsyncImageSource
   #region Helper methods
   public static unsafe void Register()
   {
-
     var sourceInfo = new obs_source_info();
     fixed (byte* id = Encoding.UTF8.GetBytes(Module.ModuleName))
     {
@@ -110,7 +109,7 @@ public class AsyncImageSource
   {
     gs_image_file3_init_texture(&if4->image3);
   }
-  
+
   static unsafe sbyte* bstrdup(sbyte* str)
   {
     var managedStr = Marshal.PtrToStringUTF8((IntPtr)str);
@@ -133,11 +132,11 @@ public class AsyncImageSource
   static unsafe void image_source_load(image_source* context)
   {
     // this method differs a lot from the original since this is what is changed to async loading for this plugin
-    
+
     Module.Log("image_source_load called", ObsLogLevel.Debug);
-    
+
     context->last_load = DateTime.UtcNow.Ticks;
-    
+
     if (context->file == null) // mimic the original behavior of this method for this case fully in synchronized context
     {
       Module.Log("image_source_load: null file", ObsLogLevel.Debug);
@@ -146,7 +145,7 @@ public class AsyncImageSource
       Obs.obs_leave_graphics();
       return;
     }
-    
+
     context->file_timestamp = get_modified_timestamp(context->file);
 
     // remember what is supposed to be loaded while still in synchronized context
@@ -160,13 +159,13 @@ public class AsyncImageSource
     {
       gs_image_file4 if4;
       Module.Log(string.Format("loading texture '{0}'", fileString), ObsLogLevel.Debug);
-      
-      var stopwatch = new System.Diagnostics.Stopwatch(); 
+
+      var stopwatch = new System.Diagnostics.Stopwatch();
       stopwatch.Start();
       // this is what takes too much time within a frame, the whole reason why this plugin exists is to run this here in a thread:
       ObsImageFile.gs_image_file4_init(&if4, file, linear_alpha ? gs_image_alpha_mode.GS_IMAGE_ALPHA_PREMULTIPLY_SRGB : gs_image_alpha_mode.GS_IMAGE_ALPHA_PREMULTIPLY);
       stopwatch.Stop();
-      
+
       // entering graphics context also ensures syncing to the main thread for the following operations
       Obs.obs_enter_graphics();
       if (context->last_load > last_load) // if the current load operation is outdated in the meantime discard everything and abort
@@ -307,26 +306,11 @@ public class AsyncImageSource
   static unsafe void* image_source_create(obs_data* settings, obs_source* source)
   {
     Module.Log("image_source_create called", ObsLogLevel.Debug);
-    var context = (image_source*)Marshal.AllocCoTaskMem(sizeof(image_source));
+
+    var context = Module.bzalloc<image_source>(); //TODO: change this after this was implemented: https://github.com/kostya9/NetObsBindings/issues/13
     context->source = source;
-    // in C# unsafe struct fields are not initialized and contain random values (pointers as well as simple values like int or bool) so unlike the original C++ code explicit initializations are needed here
-    context->file = null;
-    context->persistent = false;
-    context->linear_alpha = false;
-    context->file_timestamp = 0;
-    context->update_time_elapsed = 0;
-    context->last_time = 0;
-    context->active = false;
-    context->restart_gif = false;
-    context->last_load = 0;
-    context->has_new_data = false;
-    context->new_file = null;
-    context->new_persistent = false;
-    context->new_linear_alpha = false;
-    context->new_file_timestamp = 0;
-    ObsImageFile.gs_image_file4_init(&context->if4, null, gs_image_alpha_mode.GS_IMAGE_ALPHA_PREMULTIPLY); // using this as a helper for initialization
-    
-    // another C# specific thing, image_source_update() can't be called directly since it was attributed with UnmanagedCallersOnly, a delegate is needed
+
+    // a C# specific thing, image_source_update() can't be called directly since it was attributed with UnmanagedCallersOnly, a delegate is needed
     delegate* unmanaged[Cdecl]<void*, obs_data*, void> image_source_update_func = &image_source_update;
     image_source_update_func(context, settings);
 
@@ -343,7 +327,7 @@ public class AsyncImageSource
 
     if (context->file != null)
       ObsBmem.bfree(context->file);
-    Marshal.FreeCoTaskMem((IntPtr)data);
+    ObsBmem.bfree(context);
   }
 
   [UnmanagedCallersOnly(CallConvs = new[] { typeof(System.Runtime.CompilerServices.CallConvCdecl) })]
@@ -409,14 +393,14 @@ public class AsyncImageSource
       context->persistent = context->new_persistent;
       context->linear_alpha = context->new_linear_alpha;
       context->file_timestamp = context->new_file_timestamp;
-      
+
       Module.Log(string.Format("activated texture '{0}'", fileString), ObsLogLevel.Debug);
 
       // reset for the next loading procedure
       context->has_new_data = false;
     }
     Obs.obs_leave_graphics();
-    
+
     if (Convert.ToBoolean(Obs.obs_source_showing(context->source)))
     {
       if (context->update_time_elapsed >= 1.0f)

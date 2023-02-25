@@ -33,12 +33,12 @@ mkdir ..\..\publish\linux-x64\ 2>nul
 copy /Y %BuildFolderFromWindows%\%ProjectName%\publish\* ..\..\publish\linux-x64\
 
 REM Create release structure.
-mkdir ..\..\release\linux-x64\obs-plugins\64bit 2>nul
-mkdir ..\..\release\linux-x64\data\obs-plugins\%ProjectName%\locale 2>nul
-del /F /S /Q ..\..\release\linux-x64\obs-plugins\64bit\*
-del /F /S /Q ..\..\release\linux-x64\data\obs-plugins\%ProjectName%\locale\*
-copy /Y ..\..\publish\linux-x64\ ..\..\release\linux-x64\obs-plugins\64bit\
-copy /Y ..\..\locale\* ..\..\release\linux-x64\data\obs-plugins\%ProjectName%\locale
+mkdir ..\..\release\linux-x64\.config\obs-studio\plugins\%ProjectName%\bin\64bit 2>nul
+mkdir ..\..\release\linux-x64\.config\obs-studio\plugins\%ProjectName%\locale 2>nul
+del /F /S /Q ..\..\release\linux-x64\.config\obs-studio\plugins\%ProjectName%\bin\64bit\*
+del /F /S /Q ..\..\release\linux-x64\.config\obs-studio\plugins\%ProjectName%\locale\*
+copy /Y ..\..\publish\linux-x64\ ..\..\release\linux-x64\.config\obs-studio\plugins\%ProjectName%\bin\64bit\
+copy /Y ..\..\locale\* ..\..\release\linux-x64\.config\obs-studio\plugins\%ProjectName%\locale
 
 REM Final cleanup in WSL
 wsl rm -Rf %BuildFolderFromLinux%/%ProjectName%/*

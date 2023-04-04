@@ -1,4 +1,7 @@
-﻿using System.Runtime.InteropServices;
+﻿// SPDX-FileCopyrightText: © 2023 YorVeX, https://github.com/YorVeX
+// SPDX-License-Identifier: MIT
+
+using System.Runtime.InteropServices;
 using System.Text;
 using ObsInterop;
 namespace xAsyncImageSource;
@@ -110,6 +113,7 @@ public class AsyncImageSource
     gs_image_file3_init_texture(&if4->image3);
   }
 
+  //TODO: test to replace this by the new ObsBmem.bstrdup function: https://github.com/kostya9/NetObsBindings/blob/main/NetObsBindings/ObsInterop/ObsBmem.Manual.cs#LL36
   static unsafe sbyte* bstrdup(sbyte* str)
   {
     var managedStr = Marshal.PtrToStringUTF8((IntPtr)str);

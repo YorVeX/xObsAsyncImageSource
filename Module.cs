@@ -4,7 +4,7 @@
 using System.Runtime.InteropServices;
 using System.Text;
 using ObsInterop;
-namespace xAsyncImageSource;
+namespace xObsAsyncImageSource;
 
 // original image source probably isn't changed to be threaded, see https://github.com/obsproject/obs-studio/issues/5444
 
@@ -90,7 +90,7 @@ public static class Module
       structBytes[index] = 0;
     return context;
   }
-  
+
   #endregion Helper methods
 
   #region OBS module API methods

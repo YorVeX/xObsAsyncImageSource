@@ -4,7 +4,7 @@
 using System.Runtime.InteropServices;
 using System.Text;
 using ObsInterop;
-namespace xAsyncImageSource;
+namespace xObsAsyncImageSource;
 
 // original image source code this was derived from: https://github.com/obsproject/obs-studio/blob/29.0.2/plugins/image-source/image-source.c
 

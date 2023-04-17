@@ -61,6 +61,59 @@ are executed asynchronously on a separate thread instead of the main OBS thread.
 to eventually synchronize things back to the main thread after loading was finished.
 
 ## Usage
+
+### Installation
+Before installing make sure that OBS is not running.
+
+<details>
+<summary>🟦 Windows</summary>
+
+Open an Explorer window and into the address bar paste this and press enter:
+
+`%APPDATA%\obs-studio`
+
+This will redirect to a location like C:\Users\<YourWindowsUsername>\AppData\Roaming\obs-studio. Extract the files from the downloaded .7z file to this folder (= copy the contained obs-plugins and data folders to it). This will install the plugin for the current Windows user.
+
+If you need to install the plugin for all users on the system you can also extract the downloaded .7z file (= copy the contained obs-plugins and data folders) into the OBS Studio installation directory. The default location for this is
+
+`C:\Program Files\obs-studio`
+
+This needs admin permissions.
+
+</details>
+
+<details>
+<summary>🐧 Linux</summary>
+
+The folder structure in the downloaded .7z file is prepared so that you can extract the file (= copy the contained files) into your user home and on many systems this will just work already.
+
+However, depending on the distribution and OBS installation method (manual, distro repo, snap, flatpak...) the location of this folder can vary, so if it doesn't work from the user home you might have to look around a bit.
+
+Example locations for the plugin .so (and .so.dbg) file are:
+
+- `~/.config/obs-studio/plugins/` (The structure the .7z is prepared for)
+- `/usr/lib/obs-plugins/`
+- `/usr/lib/x86_64-linux-gnu/obs-plugins/`
+- `/usr/share/obs/obs-plugins/`
+- `~/.local/share/flatpak/app/com.obsproject.Studio/x86_64/stable/active/files/lib/obs-plugins/`
+- `/var/lib/flatpak/app/com.obsproject.Studio/x86_64/stable/active/files/lib/obs-plugins/`
+
+Unfortunately the expected location of the locale, which can be found in the data folder, can vary also.
+
+If you get missing locale errors from the plugin you can try to copy the "locale" folder found inside the data folder to:
+
+- `/usr/share/obs/obs-plugins/<plugin name>/locale`
+- `~/.local/share/flatpak/app/com.obsproject.Studio/x86_64/stable/active/files/share/obs/obs-plugins/<plugin name>/locale`
+- `/var/lib/flatpak/app/com.obsproject.Studio/x86_64/stable/active/files/share/obs/obs-plugins/<plugin name>/locale`
+
+If in doubt, please check where other "en-US.ini" files are located on your system.
+
+</details>
+
+The steps to update an older version of the plugin to a newer version are the same, except that during file extraction you need to confirm overwriting existing files in addition.
+
+### Settings
+
 After installation add a source just like you would [add the original image source](https://obsproject.com/wiki/Sources-Guide#image), but instead select "Image (Async)" from the list of available source types.
 
 ![image](https://user-images.githubusercontent.com/528974/220010613-2cb22305-45d0-4bcb-b613-c8a01306ad10.png)

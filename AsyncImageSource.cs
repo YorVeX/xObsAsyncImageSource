@@ -475,6 +475,8 @@ public class AsyncImageSource
     fixed (byte*
       path = Encoding.UTF8.GetBytes(defaultPath),
       propertyImageIdentifier = Module.ObsText("Image"),
+      propertyAsyncInfoIdentifierId = "async_info"u8,
+      propertyAsyncInfoIdentifierText = "(Async)"u8,
       propertyFileIdentifier = "file"u8,
       propertyFileCaption = Module.ObsText("File"),
       propertyUnloadIdentifier = "unload"u8,
@@ -509,7 +511,9 @@ public class AsyncImageSource
 #endif
     )
     {
-      var prop = ObsProperties.obs_properties_add_path(properties, (sbyte*)propertyFileIdentifier, (sbyte*)propertyFileCaption, obs_path_type.OBS_PATH_FILE, (sbyte*)browseFileFilter, (sbyte*)path);
+      var prop = ObsProperties.obs_properties_add_text(properties, (sbyte*)propertyAsyncInfoIdentifierId, (sbyte*)propertyAsyncInfoIdentifierText, obs_text_type.OBS_TEXT_INFO);
+      
+      prop = ObsProperties.obs_properties_add_path(properties, (sbyte*)propertyFileIdentifier, (sbyte*)propertyFileCaption, obs_path_type.OBS_PATH_FILE, (sbyte*)browseFileFilter, (sbyte*)path);
 
       prop = ObsProperties.obs_properties_add_bool(properties, (sbyte*)propertyUnloadIdentifier, (sbyte*)propertyUnloadCaption);
 

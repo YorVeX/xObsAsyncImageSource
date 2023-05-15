@@ -311,7 +311,8 @@ public class AsyncImageSource
   {
     Module.Log("image_source_create called", ObsLogLevel.Debug);
 
-    var context = Module.bzalloc<image_source>(); //TODO: change this after this was implemented: https://github.com/kostya9/NetObsBindings/issues/13
+
+    var context = ObsBmem.bzalloc<image_source>();
     context->source = source;
 
     // a C# specific thing, image_source_update() can't be called directly since it was attributed with UnmanagedCallersOnly, a delegate is needed

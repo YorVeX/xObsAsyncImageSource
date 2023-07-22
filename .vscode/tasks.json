@@ -64,6 +64,27 @@
                 "publish (win-x64)"
             ],
             "problemMatcher": "$msCompile"
+        },
+        {
+            "label": "Build win-x64 Installer",
+            "type": "shell",
+            "command": "makensis",
+            "args": [
+                "/V3",
+                "scripts\\xObsAsyncImageSource-Installer.nsi"
+            ],
+            "group": "build"
+        },
+        {
+            "label": "Build win-x64 Installer (strict)",
+            "type": "shell",
+            "command": "makensis",
+            "args": [
+                "/V3",
+                "/WX",
+                "scripts\\xObsAsyncImageSource-Installer.nsi"
+            ],
+            "group": "build"
         }
     ]
 }

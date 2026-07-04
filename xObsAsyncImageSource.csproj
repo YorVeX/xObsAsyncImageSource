@@ -11,9 +11,9 @@
     <InvariantGlobalization>true</InvariantGlobalization>
     <OptimizationPreference>Speed</OptimizationPreference>
     <PublishAot>true</PublishAot>
-    <Copyright>© 2023 github.com/YorVeX</Copyright>
+    <Copyright>© 2023-2026 github.com/YorVeX</Copyright>
     <Authors>https://github.com/YorVeX</Authors>
-    <AssemblyVersion>1.0.0.0</AssemblyVersion>
+    <AssemblyVersion>1.1.0.0</AssemblyVersion>
   </PropertyGroup>
 
   <ItemGroup>

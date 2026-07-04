@@ -49,10 +49,10 @@ else
   echo "  ✗ Plugin binary missing!"
   exit 1
 fi
-if [ -d "$STAGING_ROOT/$PLUGIN_NAME/data/locale" ] && [ "$(ls -A "$STAGING_ROOT/$PLUGIN_NAME/data/locale/" 2>/dev/null)" ]; then
+if [ -d "$BUNDLE_DIR/Contents/Resources/locale" ] && [ "$(ls -A "$BUNDLE_DIR/Contents/Resources/locale/" 2>/dev/null)" ]; then
   echo "  ✓ Locale files found"
 else
-  echo "  ⚠ Warning: No locale files found in data/locale/"
+  echo "  ⚠ Warning: No locale files found in Contents/Resources/locale/"
 fi
 
 echo ""
@@ -63,16 +63,15 @@ find "$STAGING_ROOT" -type f | sort
 echo ""
 echo "[1/2] Creating .tar.xz archive..."
 
-# Create a temp directory with just the plugin folder name to ensure clean tar structure
+# Create a temp directory with just the plugin bundle wrapped in a PLUGIN_NAME folder
+# so that extracting the tar gives: xObsAsyncImageSource/xObsAsyncImageSource.plugin/
+# Note: on macOS OBS reads data files from inside the .plugin bundle (Contents/Resources/),
+# so there is no sibling data/ directory. A sibling dir would make OBS load the plugin twice.
 TEMP_PKG_DIR="$OUTPUT_DIR/macos-universal/_pkg_temp"
 rm -rf "$TEMP_PKG_DIR"
-mkdir -p "$TEMP_PKG_DIR"
-
-# Copy the entire staging tree into the temp dir wrapped in a PLUGIN_NAME folder
-# so that extracting the tar gives: xObsAsyncImageSource/ (containing xObsAsyncImageSource.plugin + data/)
 mkdir -p "$TEMP_PKG_DIR/$PLUGIN_NAME"
+
 cp -R "$STAGING_ROOT/$PLUGIN_NAME.plugin" "$TEMP_PKG_DIR/$PLUGIN_NAME/"
-cp -R "$STAGING_ROOT/$PLUGIN_NAME" "$TEMP_PKG_DIR/$PLUGIN_NAME/"
 
 cd "$TEMP_PKG_DIR"
 tar -cJf "$RELEASE_DIR/$PACKAGE_NAME.tar.xz" "$PLUGIN_NAME/"
@@ -100,7 +99,6 @@ if command -v pkgbuild &>/dev/null; then
   echo "Created: $RELEASE_DIR/$PACKAGE_NAME.pkg"
   ls -lh "$RELEASE_DIR/$PACKAGE_NAME.pkg"
 
-  # Optional: verify pkg with pkgutil
   if command -v pkgutil &>/dev/null; then
     echo ""
     echo "Verifying .pkg..."
@@ -111,7 +109,6 @@ if command -v pkgbuild &>/dev/null; then
   fi
 else
   echo "WARNING: pkgbuild not found. Skipping .pkg creation."
-  echo "To create a .pkg, run this script on macOS with Xcode command line tools installed."
 fi
 
 # 3. Create uninstaller .pkg (separate identifier so postinstall can forget the installer receipt cleanly)
@@ -143,12 +140,6 @@ echo "Uninstalling \$PLUGIN_NAME..."
 if [ -d "\$OBS_PLUGINS_DIR/\$PLUGIN_NAME.plugin" ]; then
   rm -rf "\$OBS_PLUGINS_DIR/\$PLUGIN_NAME.plugin"
   echo "  Removed \$OBS_PLUGINS_DIR/\$PLUGIN_NAME.plugin"
-fi
-
-# Remove the data directory
-if [ -d "\$OBS_PLUGINS_DIR/\$PLUGIN_NAME" ]; then
-  rm -rf "\$OBS_PLUGINS_DIR/\$PLUGIN_NAME"
-  echo "  Removed \$OBS_PLUGINS_DIR/\$PLUGIN_NAME"
 fi
 
 # Forget the installer receipt (this sticks because the framework writes the
@@ -194,11 +185,9 @@ ls -lh "$RELEASE_DIR/"
 echo ""
 echo "The .tar.xz and installer .pkg contain:"
 echo "  $PLUGIN_NAME/"
-echo "  ├── $PLUGIN_NAME.plugin/        (OBS plugin bundle)"
-echo "  └── data/"
-echo "      └── locale/                 (translation files)"
+echo "  └── $PLUGIN_NAME.plugin/        (OBS plugin bundle, locale files in Contents/Resources/locale/)"
 echo ""
-echo "The uninstaller .pkg removes all plugin files."
+echo "The uninstaller .pkg removes the plugin bundle."
 echo ""
 echo "Installation (manual):"
 echo "  tar -xJf $PACKAGE_NAME.tar.xz -C ~/'Library/Application Support/obs-studio/plugins/'"

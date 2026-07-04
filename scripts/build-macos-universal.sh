@@ -51,27 +51,28 @@ lipo -create \
 echo "Universal binary created: $UNIVERSAL_DIR/$PLUGIN_NAME.dylib"
 lipo -info "$UNIVERSAL_DIR/$PLUGIN_NAME.dylib"
 
-# 4. Create staging directory with .plugin bundle + data/locale
+# 4. Create staging directory with .plugin bundle
 echo ""
 echo "[4/5] Creating .plugin bundle and staging directory..."
 
 STAGING_ROOT="$UNIVERSAL_DIR/staging"
 BUNDLE_DIR="$STAGING_ROOT/$PLUGIN_NAME.plugin"
-DATA_DIR="$STAGING_ROOT/$PLUGIN_NAME/data/locale"
 
 rm -rf "$STAGING_ROOT"
 mkdir -p "$BUNDLE_DIR/Contents/MacOS"
 mkdir -p "$BUNDLE_DIR/Contents/Resources"
-mkdir -p "$DATA_DIR"
 
 # Copy the universal binary WITHOUT .dylib extension (macOS bundle loader matches CFBundleExecutable)
 cp "$UNIVERSAL_DIR/$PLUGIN_NAME.dylib" "$BUNDLE_DIR/Contents/MacOS/$PLUGIN_NAME"
 
-# Copy locale files to both the bundle (for resource lookup) and data/ (OBS expects them here)
+# Copy locale files into the bundle's Resources/locale/ (OBS on macOS reads data files
+# exclusively from the .plugin bundle's Contents/Resources/, which is the module's data_path.
+# Do NOT create a sibling data/ directory next to the .plugin bundle: OBS globs plugins/*
+# and treats every directory there as a module, so a sibling data/ dir would make the
+# plugin load twice with "Source already exists! Duplicate library?" errors.)
 if [ -d "$SRC_DIR/locale" ]; then
   mkdir -p "$BUNDLE_DIR/Contents/Resources/locale"
   cp "$SRC_DIR/locale/"*.ini "$BUNDLE_DIR/Contents/Resources/locale/"
-  cp "$SRC_DIR/locale/"*.ini "$DATA_DIR/"
   echo "Copied locale files ($(ls "$SRC_DIR/locale/"*.ini 2>/dev/null | wc -l | tr -d ' ') files: $(ls "$SRC_DIR/locale/"*.ini 2>/dev/null | xargs -n1 basename | tr '\n' ' '))"
 fi
 

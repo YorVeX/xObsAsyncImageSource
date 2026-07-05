@@ -1,0 +1,16 @@
+{
+    // Disable automatic formatting and syntax corrections for NSIS installer scripts
+    "[nsis]": {
+        "editor.formatOnSave": false,
+        "editor.formatOnPaste": false,
+        "editor.codeActionsOnSave": {
+            "source.fixAll": "never",
+            "source.organizeImports": "never"
+        },
+        "editor.defaultFormatter": null
+    },
+    // Also apply to .nsi files explicitly
+    "files.associations": {
+        "*.nsi": "nsis"
+    }
+}

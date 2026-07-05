@@ -9,7 +9,7 @@ OBS plugin providing an image source that loads images asynchronously (causing a
 - Linux
   - occasionally tested, but not regularly
   - binary build created on Ubuntu 22.04 WSL environment, therefore linked against glibc 2.35
-- macOS Monterey 12.0.1
+- macOS Monterey 12.0+
   - both x64 (Intel) and arm64 (Apple Silicon) supported
 
 ## Comparison to original image source

@@ -4,12 +4,13 @@ OBS plugin providing an image source that loads images asynchronously (causing a
 ![image](https://user-images.githubusercontent.com/528974/220008779-3075b81d-0883-4038-970c-f84a432cc54e.png)
 
 ## Prerequisites
-- OBS 29+ 64 bit
-- Windows
-  - tested only on Windows 10, but Windows 11 should also work
+- OBS 32+ 64 bit (find older releases on GitHub for 29+ support)
+- Windows 11
 - Linux
   - occasionally tested, but not regularly
-  - binary build created on Ubuntu 20.04 WSL environment, therefore linked against glibc 2.31
+  - binary build created on Ubuntu 22.04 WSL environment, therefore linked against glibc 2.35
+- macOS Monterey 12.0.1
+  - both x64 (Intel) and arm64 (Apple Silicon) supported
 
 ## Comparison to original image source
 
@@ -65,7 +66,7 @@ to eventually synchronize things back to the main thread after loading was finis
 ### Installation
 Before installing make sure that OBS is not running.
 
-For portable mode simply extract the .7z file into the root directory of the portable folder structure. For regular OBS installations see the operating system specific instructions below.
+For portable mode on Windows simply extract the .7z file into the root directory of the portable folder structure. For regular OBS installations see the operating system specific instructions below.
 
 <details>
 <summary>🟦 Windows</summary>
@@ -108,6 +109,19 @@ If in doubt, please check where other "en-US.ini" files are located on your syst
 
 </details>
 
+<details>
+<summary>🍎 macOS</summary>
+
+For automatic installation just run the provided installer, then restart OBS.
+
+For manual installation extract the downloaded .tar.xz file (= copy the contained .plugin folder) into the OBS Studio library data directory. The default location for this is
+
+`~/Library/Application Support/obs-studio/plugins`
+
+To uninstall, remove the manually installed files or run the separately provided uninstaller package - don't get confused when it's acting like an installation process, all it does is uninstall the files and unregister the original package from the system.
+
+</details>
+
 The steps to update an older version of the plugin to a newer version are the same, except that during file extraction you need to confirm overwriting existing files in addition.
 
 ### Settings
@@ -131,13 +145,7 @@ To verify whether the conversion was actually applied click the plus icon to add
   - **A**: Under ideal conditions yes, but that depends a lot on your system and configuration. If your computer is already maxing out its CPU usage even before the image load and/or you load a really large image you could still get lags/dropped frames, albeit a lot less compared to the original image source. E.g. in my tests when running OBS at 60 FPS and loading an unusually complex and big 5000x5000 .png file the original source would drop ~50 frames while the async image source would drop 5.
 
 - **Q**: Wow, that's cool, can I also have this for image slide show sources?
-  - **A**: OBS 30.1.X or higher has a reworked slideshow that also loads images asynchronously. If you don't want to wait, you can get the current beta of it from [here](https://github.com/obsproject/obs-studio/releases).
-
-- **Q**: Why is the plugin file so big compared to other plugins for the little bit it does, will this cause issues?
-  - **A**: Unlike other plugins it's not written directly in C++ but in C# using .NET 7 and NativeAOT (for more details read on in the section for developers). This produces some overhead in the actual plugin file, however, the code that matters for functionality of this plugin should be just as efficient and fast as code directly written in C++ so there's no reason to worry about performance on your system.
-
-- **Q**: Will there be a version for MacOS?
-  - **A**: NativeAOT [doesn't support cross-compiling](https://github.com/dotnet/runtime/blob/main/src/coreclr/nativeaot/docs/compiling.md#cross-architecture-compilation) and I don't have a Mac, so I currently can't compile it, let alone test it. You can try to compile it yourself, but note that MacOS [is currently only supported by the next preview version of .NET 8](https://learn.microsoft.com/en-us/dotnet/core/deploying/native-aot/#platformarchitecture-restrictions), although people [do already successfully create builds](https://github.com/dotnet/runtime/issues/79253) with it.
+  - **A**: OBS 30.1.X or higher already has a reworked slide show that also loads images asynchronously, so simply use the included slide show.
 
 - **Q**: Will there be a 32 bit version of this plugin?
   - **A**: No. Feel free to try and compile it for x86 targets yourself, last time I checked it wasn't fully supported in NativeAOT.
@@ -145,7 +153,7 @@ To verify whether the conversion was actually applied click the plus icon to add
 
 ## For developers
 ### C#
-OBS Classic still had a [CLR Host Plugin](https://obsproject.com/forum/resources/clr-host-plugin.21/), but with OBS Studio writing plugins in C# wasn't possible anymore. This has changed as of recently, with the release of .NET 7 and NativeAOT it is possible to produce native code that can be linked with OBS.
+OBS Classic still had a [CLR Host Plugin](https://obsproject.com/forum/resources/clr-host-plugin.21/), but with OBS Studio writing plugins in C# wasn't possible anymore. This has changed, with the release of .NET 7 and NativeAOT it is possible to produce native code that can be linked with OBS.
 
 ### Building
 Refer to the [building instructions for my example plugin](https://github.com/YorVeX/ObsCSharpExample#building), they will also apply here.

@@ -10,9 +10,8 @@ OUTPUT_DIR="$SRC_DIR/publish"
 PLUGIN_NAME="xObsAsyncImageSource"
 VERSION=$(grep -o '<AssemblyVersion>[^<]*' "$SRC_DIR/xObsAsyncImageSource.csproj" | sed 's/<AssemblyVersion>//')
 
-STAGING_ROOT="$OUTPUT_DIR/macos-universal/staging"
-BUNDLE_DIR="$STAGING_ROOT/$PLUGIN_NAME.plugin"
-RELEASE_DIR="$OUTPUT_DIR/macos-universal/release"
+STAGING_ROOT="$SRC_DIR/release/macos-universal/staging"
+RELEASE_DIR="$SRC_DIR/release/macos-universal"
 PACKAGE_NAME="${PLUGIN_NAME}-${VERSION}-macos-universal"
 
 echo "=== Creating release packages for $PLUGIN_NAME v$VERSION ==="
@@ -24,18 +23,40 @@ if [ ! -d "$STAGING_ROOT" ]; then
   exit 1
 fi
 
-# Check that the plugin bundle exists inside staging
-if [ ! -d "$BUNDLE_DIR" ]; then
-  echo "ERROR: Plugin bundle not found at $BUNDLE_DIR"
+# Check that required files exist
+if [ ! -f "$STAGING_ROOT/bin/$PLUGIN_NAME" ]; then
+  echo "ERROR: Plugin binary not found at $STAGING_ROOT/bin/$PLUGIN_NAME"
   exit 1
 fi
 
 # Create release directory
 mkdir -p "$RELEASE_DIR"
 
-# Validate the bundle and staging structure
+# Create the .plugin bundle from staging files
 echo ""
-echo "Validating staging directory..."
+echo "[1/5] Creating .plugin bundle from staging..."
+BUNDLE_DIR="$RELEASE_DIR/$PLUGIN_NAME.plugin"
+rm -rf "$BUNDLE_DIR"
+mkdir -p "$BUNDLE_DIR/Contents/MacOS"
+mkdir -p "$BUNDLE_DIR/Contents/Resources/locale"
+
+# Copy the binary (strip .dylib extension for macOS bundle loader)
+cp "$STAGING_ROOT/bin/$PLUGIN_NAME" "$BUNDLE_DIR/Contents/MacOS/$PLUGIN_NAME"
+
+# Copy locale files
+if [ -d "$STAGING_ROOT/data/locale" ]; then
+  cp "$STAGING_ROOT/data/locale/"*.ini "$BUNDLE_DIR/Contents/Resources/locale/"
+fi
+
+# Copy Info.plist from staging into the bundle
+cp "$STAGING_ROOT/Info.plist" "$BUNDLE_DIR/Contents/Info.plist"
+echo "Info.plist copied from staging"
+
+echo "Plugin bundle created: $BUNDLE_DIR"
+
+# Validate the bundle
+echo ""
+echo "Validating plugin bundle..."
 if [ -f "$BUNDLE_DIR/Contents/Info.plist" ]; then
   echo "  ✓ Info.plist found"
 else
@@ -56,26 +77,23 @@ else
 fi
 
 echo ""
-echo "Staging directory contents:"
-find "$STAGING_ROOT" -type f | sort
+echo "Plugin bundle structure:"
+find "$BUNDLE_DIR" -type f | sort
 
-# 1. Create .tar.xz archive (for manual installation)
+# 2. Create .tar.xz archive (for manual installation)
 echo ""
-echo "[1/2] Creating .tar.xz archive..."
+echo "[2/5] Creating .tar.xz archive..."
 
-# Create a temp directory with just the plugin bundle wrapped in a PLUGIN_NAME folder
-# so that extracting the tar gives: xObsAsyncImageSource/xObsAsyncImageSource.plugin/
-# Note: on macOS OBS reads data files from inside the .plugin bundle (Contents/Resources/),
-# so there is no sibling data/ directory. A sibling dir would make OBS load the plugin twice.
-TEMP_PKG_DIR="$OUTPUT_DIR/macos-universal/_pkg_temp"
-rm -rf "$TEMP_PKG_DIR"
-mkdir -p "$TEMP_PKG_DIR/$PLUGIN_NAME"
+# Create a temp directory with the plugin bundle wrapped in a PLUGIN_NAME folder
+TAR_TEMP_DIR="$OUTPUT_DIR/macos-universal/_tar_temp"
+rm -rf "$TAR_TEMP_DIR"
+mkdir -p "$TAR_TEMP_DIR/$PLUGIN_NAME"
 
-cp -R "$STAGING_ROOT/$PLUGIN_NAME.plugin" "$TEMP_PKG_DIR/$PLUGIN_NAME/"
+cp -R "$BUNDLE_DIR" "$TAR_TEMP_DIR/$PLUGIN_NAME/"
 
-cd "$TEMP_PKG_DIR"
+cd "$TAR_TEMP_DIR"
 tar -cJf "$RELEASE_DIR/$PACKAGE_NAME.tar.xz" "$PLUGIN_NAME/"
-rm -rf "$TEMP_PKG_DIR"
+rm -rf "$TAR_TEMP_DIR"
 cd "$SRC_DIR"
 
 echo "Created: $RELEASE_DIR/$PACKAGE_NAME.tar.xz"
@@ -86,16 +104,23 @@ echo ""
 echo "Verifying .tar.xz contents:"
 tar -tJf "$RELEASE_DIR/$PACKAGE_NAME.tar.xz" | head -30
 
-# 2. Create .pkg installer (requires pkgbuild, macOS only)
+# 3. Create .pkg installer (requires pkgbuild, macOS only)
 echo ""
-echo "[2/2] Creating .pkg installer..."
+echo "[3/5] Creating .pkg installer..."
 if command -v pkgbuild &>/dev/null; then
+  PKG_ROOT_DIR="$OUTPUT_DIR/macos-universal/_pkg_root"
+  rm -rf "$PKG_ROOT_DIR"
+  mkdir -p "$PKG_ROOT_DIR"
+  cp -R "$BUNDLE_DIR" "$PKG_ROOT_DIR/"
+
   pkgbuild \
-    --root "$STAGING_ROOT" \
+    --root "$PKG_ROOT_DIR" \
     --install-location "$HOME/Library/Application Support/obs-studio/plugins/" \
     --identifier "com.yorvex.xobsasyncimagesource" \
     --version "$VERSION" \
     "$RELEASE_DIR/$PACKAGE_NAME.pkg"
+
+  rm -rf "$PKG_ROOT_DIR"
   echo "Created: $RELEASE_DIR/$PACKAGE_NAME.pkg"
   ls -lh "$RELEASE_DIR/$PACKAGE_NAME.pkg"
 
@@ -111,9 +136,9 @@ else
   echo "WARNING: pkgbuild not found. Skipping .pkg creation."
 fi
 
-# 3. Create uninstaller .pkg (separate identifier so postinstall can forget the installer receipt cleanly)
+# 5. Create uninstaller .pkg (separate identifier so postinstall can forget the installer receipt cleanly)
 echo ""
-echo "[3/3] Creating uninstaller .pkg..."
+echo "[5/5] Creating uninstaller .pkg..."
 if command -v pkgbuild &>/dev/null; then
   UNINSTALLER_DIR="$OUTPUT_DIR/macos-universal/_uninstaller_temp"
   UNINSTALLER_SCRIPTS_DIR="$UNINSTALLER_DIR/scripts"
@@ -126,7 +151,7 @@ if command -v pkgbuild &>/dev/null; then
   # Write the postinstall script that removes files then forgets the receipts
   cat > "$UNINSTALLER_SCRIPTS_DIR/postinstall" << UNINSTALLEOF
 #!/bin/bash
-# Uninstaller postinstall script for xObsAsyncImageSource
+# Uninstaller postinstall script for $PLUGIN_NAME
 # Removes all plugin files and cleans up the pkgutil receipts
 
 PLUGIN_NAME="$PLUGIN_NAME"
@@ -196,5 +221,5 @@ echo "Uninstallation:"
 echo "  open ${PLUGIN_NAME}-${VERSION}-macos-universal-uninstaller.pkg"
 echo ""
 echo "For signing (requires Apple Developer account):"
-echo "  codesign --force --deep --sign 'Developer ID Application: ...' $BUNDLE_DIR"
-echo "  pkgbuild --root $STAGING_ROOT --install-location ... --sign 'Developer ID Installer: ...' $PACKAGE_NAME.pkg"
+echo "  codesign --force --deep --sign 'Developer ID Application: ...' '$BUNDLE_DIR'"
+echo "  pkgbuild --root '<dir-with-only-plugin-bundle>' --install-location ... --sign 'Developer ID Installer: ...' '$PACKAGE_NAME.pkg'"

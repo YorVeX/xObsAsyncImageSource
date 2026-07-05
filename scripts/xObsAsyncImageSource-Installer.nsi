@@ -30,7 +30,7 @@ Icon "..\img\${APPNAME}-Icon.ico"
 UninstallIcon "..\img\${APPNAME}-Icon.ico"
 InstallDirRegKey HKLM "Software\${APPNAME}" ""
 InstallDir "$PROGRAMFILES64\obs-studio"
-OutFile "..\release\win-x64\${APPNAME}-win-x64-installer.exe"
+OutFile "..\release\win-x64\${APPNAME}-${VERSION}-win-x64-installer.exe"
 SetCompressor LZMA
 
 ; Define splash screen

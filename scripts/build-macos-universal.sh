@@ -101,9 +101,9 @@ cat > "$BUNDLE_DIR/Contents/Info.plist" << PLISTEOF
     <key>CFBundleVersion</key>
     <string>$VERSION</string>
     <key>NSHumanReadableCopyright</key>
-    <string>© 2023 YorVeX, https://github.com/YorVeX. Licensed under MIT.</string>
+    <string>© 2023-2026 YorVeX, https://github.com/YorVeX. Licensed under MIT.</string>
     <key>CFBundleGetInfoString</key>
-    <string>$VERSION, Copyright © 2023 YorVeX</string>
+    <string>$VERSION, Copyright © 2023-2026 YorVeX</string>
     <key>MinimumOSVersion</key>
     <string>12.0</string>
 </dict>

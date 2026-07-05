@@ -1,7 +1,7 @@
 @echo off
 REM The base build folder containing all .NET projects to build using the WSL environment from within the WSL environment
 set BuildFolderFromLinux=/build-net
-set BuildFolderFromWindows=\\wsl.localhost\Ubuntu-20.04\build-net
+set BuildFolderFromWindows=\\wsl.localhost\Ubuntu-22.04\build-net
 
 REM --------------------------------
 

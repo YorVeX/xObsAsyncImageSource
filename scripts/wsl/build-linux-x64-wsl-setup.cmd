@@ -1,21 +1,32 @@
 @echo off
+setlocal enabledelayedexpansion
+
+set "WSL_DISTRO=Ubuntu-22.04"
+
 echo This script will help to initially set up WSL to be able to compile Linux binaries of OBS plugins on Windows.
 echo.
-echo Before running this you first need to manually install WSL with Ubuntu-22.04 LTS.
-echo This script assumes use of Ubuntu-22.04 LTS instead of the latest version so that produced binaries are also
-echo compatible with older glibc versions. 
-echo To install this open a PowerShell console with administrator privileges and execute this:
-echo wsl --install Ubuntu-22.04
-echo.
-echo After installation was finished run `sudo apt update` and `sudo apt upgrade` once so that all packages are up to date.
-echo Then exit this script, restart and only continue when the following lines list the WSL environment you want to use for building as default.
-echo [96m
-wsl -l
-echo [0m
-echo Press any key when the correct WSL distribution is shown as default and you are ready to continue...
-pause >nul
+echo Checking if %WSL_DISTRO% is installed...
 
-cls
+REM Check if the required WSL distro is available.
+wsl -d %WSL_DISTRO% echo "ok" >nul 2>nul
+if %ERRORLEVEL% NEQ 0 (
+  echo.
+  echo [91mError: %WSL_DISTRO% is not installed.[0m
+  echo.
+  echo This script requires %WSL_DISTRO% to compile Linux binaries that are compatible with older glibc versions.
+  echo.
+  echo To install it, open a PowerShell console with administrator privileges and execute:
+  echo.
+  echo   wsl --install %WSL_DISTRO%
+  echo.
+  echo After installation finishes, run `sudo apt update` and `sudo apt upgrade` once to bring all packages up to date.
+  echo Then re-run this script.
+  echo.
+  pause
+  exit /b 1
+)
+echo [92mFound %WSL_DISTRO%[0m
+echo.
 
 echo [101;93mPlease note:[0m For easy accessibility this script will create a "/build-net" folder in the WSL root directory
 echo (and not in the user home) that the default WSL user has full access to.
@@ -27,14 +38,14 @@ cls
 
 echo Preparing build folder, installing .NET 10 SDK and necessary build depedencies...
 REM All done in one line to prevent multiple sudo password prompts:
-wsl sudo add-apt-repository -y ppa:dotnet/backports ^&^& sudo apt-get install -y dotnet-sdk-10.0 ^&^& sudo mkdir -p /build-net ^&^& sudo chown -R $USER:$USER /build-net
+wsl -d %WSL_DISTRO% sudo add-apt-repository -y ppa:dotnet/backports ^&^& sudo apt-get install -y dotnet-sdk-10.0 clang zlib1g-dev ^&^& sudo mkdir -p /build-net ^&^& sudo chown -R $USER:$USER /build-net
 
 if %ERRORLEVEL% == 0 (
+  echo.
   echo All done, other WSL based build scripts can be used now.
 ) else (
+  echo.
   echo Something went wrong, the script ran into error %ERRORLEVEL%
 )
-
-
 
 pause

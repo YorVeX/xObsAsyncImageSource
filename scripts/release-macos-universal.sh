@@ -109,18 +109,53 @@ echo ""
 echo "[3/5] Creating .pkg installer..."
 if command -v pkgbuild &>/dev/null; then
   PKG_ROOT_DIR="$OUTPUT_DIR/macos-universal/_pkg_root"
-  rm -rf "$PKG_ROOT_DIR"
+  PKG_SCRIPTS_DIR="$OUTPUT_DIR/macos-universal/_pkg_scripts"
+  rm -rf "$PKG_ROOT_DIR" "$PKG_SCRIPTS_DIR"
   mkdir -p "$PKG_ROOT_DIR"
+  mkdir -p "$PKG_SCRIPTS_DIR"
   cp -R "$BUNDLE_DIR" "$PKG_ROOT_DIR/"
+
+  # Write postinstall script that copies the plugin to the real user's home
+  # The installer runs as root, so we determine the console user at install time
+  cat > "$PKG_SCRIPTS_DIR/postinstall" << POSTINSTALLEOF
+#!/bin/bash
+# Postinstall script for $PLUGIN_NAME
+# Copies the plugin bundle to the user's home directory
+# (pkgbuild's --install-location cannot expand \$HOME or ~)
+
+PLUGIN_NAME="$PLUGIN_NAME"
+
+# Determine the console user's home directory
+CONSOLE_USER=\$(stat -f "%Su" /dev/console 2>/dev/null || echo "")
+if [ -z "\$CONSOLE_USER" ]; then
+  CONSOLE_USER=\$(echo "show State:/Users/ConsoleUser" | scutil | awk '/Name :/ { print \$3 }' 2>/dev/null || echo "")
+fi
+
+if [ -n "\$CONSOLE_USER" ]; then
+  USER_HOME="/Users/\$CONSOLE_USER"
+  PLUGIN_DEST="\$USER_HOME/Library/Application Support/obs-studio/plugins"
+  mkdir -p "\$PLUGIN_DEST"
+  cp -R "/tmp/$PLUGIN_NAME-installer/\$PLUGIN_NAME.plugin" "\$PLUGIN_DEST/"
+  chown -R "\$CONSOLE_USER:staff" "\$PLUGIN_DEST/\$PLUGIN_NAME.plugin"
+  echo "Installed \$PLUGIN_NAME.plugin to \$PLUGIN_DEST"
+else
+  echo "WARNING: Could not determine console user. Plugin may not be installed correctly."
+  exit 1
+fi
+exit 0
+POSTINSTALLEOF
+
+  chmod +x "$PKG_SCRIPTS_DIR/postinstall"
 
   pkgbuild \
     --root "$PKG_ROOT_DIR" \
-    --install-location "/Library/Application Support/obs-studio/plugins/" \
+    --scripts "$PKG_SCRIPTS_DIR" \
+    --install-location "/tmp/$PLUGIN_NAME-installer" \
     --identifier "com.yorvex.xobsasyncimagesource" \
     --version "$VERSION" \
     "$RELEASE_DIR/$PACKAGE_NAME.pkg"
 
-  rm -rf "$PKG_ROOT_DIR"
+  rm -rf "$PKG_ROOT_DIR" "$PKG_SCRIPTS_DIR"
   echo "Created: $RELEASE_DIR/$PACKAGE_NAME.pkg"
   ls -lh "$RELEASE_DIR/$PACKAGE_NAME.pkg"
 
@@ -157,7 +192,18 @@ if command -v pkgbuild &>/dev/null; then
 PLUGIN_NAME="$PLUGIN_NAME"
 INSTALLER_IDENTIFIER="$INSTALLER_IDENTIFIER"
 UNINSTALLER_IDENTIFIER="$UNINSTALLER_IDENTIFIER"
-OBS_PLUGINS_DIR="/Library/Application Support/obs-studio/plugins"
+
+# Determine the console user's home directory (same logic as installer postinstall)
+CONSOLE_USER=\$(stat -f "%Su" /dev/console 2>/dev/null || echo "")
+if [ -z "\$CONSOLE_USER" ]; then
+  CONSOLE_USER=\$(echo "show State:/Users/ConsoleUser" | scutil | awk '/Name :/ { print \$3 }' 2>/dev/null || echo "")
+fi
+
+if [ -n "\$CONSOLE_USER" ]; then
+  OBS_PLUGINS_DIR="/Users/\$CONSOLE_USER/Library/Application Support/obs-studio/plugins"
+else
+  OBS_PLUGINS_DIR="\$HOME/Library/Application Support/obs-studio/plugins"
+fi
 
 echo "Uninstalling \$PLUGIN_NAME..."
 

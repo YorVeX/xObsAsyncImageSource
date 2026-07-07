@@ -115,7 +115,7 @@ if command -v pkgbuild &>/dev/null; then
 
   pkgbuild \
     --root "$PKG_ROOT_DIR" \
-    --install-location "$HOME/Library/Application Support/obs-studio/plugins/" \
+    --install-location "/Library/Application Support/obs-studio/plugins/" \
     --identifier "com.yorvex.xobsasyncimagesource" \
     --version "$VERSION" \
     "$RELEASE_DIR/$PACKAGE_NAME.pkg"
@@ -157,7 +157,7 @@ if command -v pkgbuild &>/dev/null; then
 PLUGIN_NAME="$PLUGIN_NAME"
 INSTALLER_IDENTIFIER="$INSTALLER_IDENTIFIER"
 UNINSTALLER_IDENTIFIER="$UNINSTALLER_IDENTIFIER"
-OBS_PLUGINS_DIR="\$HOME/Library/Application Support/obs-studio/plugins"
+OBS_PLUGINS_DIR="/Library/Application Support/obs-studio/plugins"
 
 echo "Uninstalling \$PLUGIN_NAME..."
 

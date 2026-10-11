@@ -30,12 +30,12 @@ public class AsyncImageSource
     public ulong last_time;
     public bool active;
     public bool restart_gif;
-    public gs_image_file4 if4;
+    public gs_image_file_ex image;
 
     // extra fields needed for threaded loading
     public long last_load;
     public bool has_new_data;
-    public gs_image_file4 new_if4;
+    public gs_image_file_ex new_image;
     public sbyte* new_file;
     public bool new_persistent;
     public bool new_linear_alpha;
@@ -84,35 +84,6 @@ public class AsyncImageSource
     }
   }
 
-  static unsafe void gs_image_file2_free(gs_image_file2* if2)
-  {
-    ObsImageFile.gs_image_file_free(&if2->image);
-  }
-
-  static unsafe void gs_image_file3_free(gs_image_file3* if3)
-  {
-    gs_image_file2_free(&if3->image2);
-  }
-
-  static unsafe void gs_image_file4_free(gs_image_file4* if4)
-  {
-    gs_image_file3_free(&if4->image3);
-  }
-  static unsafe void gs_image_file2_init_texture(gs_image_file2* if2)
-  {
-    ObsImageFile.gs_image_file_init_texture(&if2->image);
-  }
-
-  static unsafe void gs_image_file3_init_texture(gs_image_file3* if3)
-  {
-    gs_image_file2_init_texture(&if3->image2);
-  }
-
-  static unsafe void gs_image_file4_init_texture(gs_image_file4* if4)
-  {
-    gs_image_file3_init_texture(&if4->image3);
-  }
-
   //TODO: test to replace this by the new ObsBmem.bstrdup function: https://github.com/kostya9/NetObsBindings/blob/main/NetObsBindings/ObsInterop/ObsBmem.Manual.cs#LL36
   static unsafe sbyte* bstrdup(sbyte* str)
   {
@@ -145,7 +116,7 @@ public class AsyncImageSource
     {
       Module.Log("image_source_load: null file", ObsLogLevel.Debug);
       Obs.obs_enter_graphics();
-      gs_image_file4_free(&context->if4);
+      ObsImageFile.gs_image_file_ex_free(&context->image);
       Obs.obs_leave_graphics();
       return;
     }
@@ -161,13 +132,13 @@ public class AsyncImageSource
     var last_load = context->last_load;
     Task.Run(() =>
     {
-      gs_image_file4 if4;
+      gs_image_file_ex image;
       Module.Log(string.Format("loading texture '{0}'", fileString), ObsLogLevel.Debug);
 
       var stopwatch = new System.Diagnostics.Stopwatch();
       stopwatch.Start();
       // this is what takes too much time within a frame, the whole reason why this plugin exists is to run this here in a thread:
-      ObsImageFile.gs_image_file4_init(&if4, file, linear_alpha ? gs_image_alpha_mode.GS_IMAGE_ALPHA_PREMULTIPLY_SRGB : gs_image_alpha_mode.GS_IMAGE_ALPHA_PREMULTIPLY);
+      ObsImageFile.gs_image_file_ex_init(&image, file, linear_alpha ? gs_image_alpha_mode.GS_IMAGE_ALPHA_PREMULTIPLY_SRGB : gs_image_alpha_mode.GS_IMAGE_ALPHA_PREMULTIPLY);
       stopwatch.Stop();
 
       // entering graphics context also ensures syncing to the main thread for the following operations
@@ -177,7 +148,7 @@ public class AsyncImageSource
         Module.Log(string.Format("aborting outdated load of texture '{0}'", fileString), ObsLogLevel.Debug);
         if (file != null)
           ObsBmem.bfree(file);
-        gs_image_file4_free(&if4);
+        ObsImageFile.gs_image_file_ex_free(&image);
         Obs.obs_leave_graphics();
         return;
       }
@@ -186,15 +157,15 @@ public class AsyncImageSource
         Module.Log("discarding outdated previous texture", ObsLogLevel.Debug);
         if (context->new_file != null)
           ObsBmem.bfree(context->new_file);
-        gs_image_file4_free(&context->new_if4);
+        ObsImageFile.gs_image_file_ex_free(&context->new_image);
       }
-      gs_image_file4_init_texture(&if4);
+      ObsImageFile.gs_image_file_ex_init_texture(&image);
       context->has_new_data = true;
-      context->new_if4 = if4;
+      context->new_image = image;
       context->new_file = file;
       context->new_persistent = persistent;
       context->new_linear_alpha = linear_alpha;
-      if (Convert.ToBoolean(if4.image3.image2.image.loaded))
+      if (Convert.ToBoolean(image.loaded))
       {
         // another difference to the original: the timestamp is only updated if the load was successful, see the discussion at https://github.com/obsproject/obs-studio/issues/3011 for details
         context->new_file_timestamp = file_timestamp;
@@ -211,7 +182,7 @@ public class AsyncImageSource
     Module.Log("image_source_unload called", ObsLogLevel.Debug);
     Obs.obs_enter_graphics();
     context->last_load = DateTime.UtcNow.Ticks;
-    gs_image_file4_free(&context->if4);
+    ObsImageFile.gs_image_file_ex_free(&context->image);
     Obs.obs_leave_graphics();
   }
 
@@ -284,14 +255,14 @@ public class AsyncImageSource
     // Module.Log("restart_gif called", ObsLogLevel.Debug);
     var context = (image_source*)data;
 
-    if (Convert.ToBoolean(context->if4.image3.image2.image.is_animated_gif))
+    if (Convert.ToBoolean(context->image.is_animated_gif))
     {
-      context->if4.image3.image2.image.cur_frame = 0;
-      context->if4.image3.image2.image.cur_loop = 0;
-      context->if4.image3.image2.image.cur_time = 0;
+      context->image.cur_frame = 0;
+      context->image.cur_loop = 0;
+      context->image.cur_time = 0;
 
       Obs.obs_enter_graphics();
-      ObsImageFile.gs_image_file4_update_texture(&context->if4);
+      ObsImageFile.gs_image_file_ex_update_texture(&context->image);
       Obs.obs_leave_graphics();
 
       context->restart_gif = false;
@@ -339,14 +310,14 @@ public class AsyncImageSource
   static unsafe uint image_source_getwidth(void* data)
   {
     // Module.Log("image_source_getwidth called", ObsLogLevel.Debug);
-    return ((image_source*)data)->if4.image3.image2.image.cx;
+    return ((image_source*)data)->image.cx;
   }
 
   [UnmanagedCallersOnly(CallConvs = new[] { typeof(System.Runtime.CompilerServices.CallConvCdecl) })]
   static unsafe uint image_source_getheight(void* data)
   {
     // Module.Log("image_source_getheight called", ObsLogLevel.Debug);
-    return ((image_source*)data)->if4.image3.image2.image.cy;
+    return ((image_source*)data)->image.cy;
   }
 
   [UnmanagedCallersOnly(CallConvs = new[] { typeof(System.Runtime.CompilerServices.CallConvCdecl) })]
@@ -354,7 +325,7 @@ public class AsyncImageSource
   {
     // Module.Log("image_source_render called", ObsLogLevel.Debug);
     var context = (image_source*)data;
-    if (context->if4.image3.image2.image.texture == null)
+    if (context->image.texture == null)
       return;
 
     var previous = ObsGraphics.gs_framebuffer_srgb_enabled();
@@ -364,9 +335,9 @@ public class AsyncImageSource
     ObsGraphics.gs_blend_function(gs_blend_type.GS_BLEND_ONE, gs_blend_type.GS_BLEND_INVSRCALPHA);
 
     fixed (byte* imageParam = "image"u8)
-      ObsGraphics.gs_effect_set_texture_srgb(ObsGraphics.gs_effect_get_param_by_name(effect, (sbyte*)imageParam), context->if4.image3.image2.image.texture);
+      ObsGraphics.gs_effect_set_texture_srgb(ObsGraphics.gs_effect_get_param_by_name(effect, (sbyte*)imageParam), context->image.texture);
 
-    ObsGraphics.gs_draw_sprite(context->if4.image3.image2.image.texture, 0, context->if4.image3.image2.image.cx, context->if4.image3.image2.image.cy);
+    ObsGraphics.gs_draw_sprite(context->image.texture, 0, context->image.cx, context->image.cy);
 
     ObsGraphics.gs_blend_state_pop();
 
@@ -390,10 +361,10 @@ public class AsyncImageSource
       // clean up current data
       if (context->file != null)
         ObsBmem.bfree(context->file);
-      gs_image_file4_free(&context->if4);
+      ObsImageFile.gs_image_file_ex_free(&context->image);
 
       // move the new data into place
-      context->if4 = context->new_if4;
+      context->image = context->new_image;
       context->file = context->new_file;
       context->persistent = context->new_persistent;
       context->linear_alpha = context->new_linear_alpha;
@@ -422,7 +393,7 @@ public class AsyncImageSource
     {
       if (!context->active)
       {
-        if (Convert.ToBoolean(context->if4.image3.image2.image.is_animated_gif))
+        if (Convert.ToBoolean(context->image.is_animated_gif))
           context->last_time = frame_time;
         context->active = true;
       }
@@ -442,15 +413,15 @@ public class AsyncImageSource
       return;
     }
 
-    if ((context->last_time > 0) && Convert.ToBoolean(context->if4.image3.image2.image.is_animated_gif))
+    if ((context->last_time > 0) && Convert.ToBoolean(context->image.is_animated_gif))
     {
       var elapsed = frame_time - context->last_time;
-      var updated = Convert.ToBoolean(ObsImageFile.gs_image_file4_tick(&context->if4, elapsed));
+      var updated = Convert.ToBoolean(ObsImageFile.gs_image_file_ex_tick(&context->image, elapsed));
 
       if (updated)
       {
         Obs.obs_enter_graphics();
-        ObsImageFile.gs_image_file4_update_texture(&context->if4);
+        ObsImageFile.gs_image_file_ex_update_texture(&context->image);
         Obs.obs_leave_graphics();
       }
     }
@@ -559,7 +530,7 @@ public class AsyncImageSource
   {
     // Module.Log("image_source_get_color_space called", ObsLogLevel.Debug);
     var s = (image_source*)data;
-    return (s->if4.image3.image2.image.texture != null) ? s->if4.space : gs_color_space.GS_CS_SRGB;
+    return (s->image.texture != null) ? s->image.space : gs_color_space.GS_CS_SRGB;
   }
 
   #endregion Source API methods

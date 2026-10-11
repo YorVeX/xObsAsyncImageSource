@@ -4,7 +4,7 @@ OBS plugin providing an image source that loads images asynchronously (causing a
 ![image](https://user-images.githubusercontent.com/528974/220008779-3075b81d-0883-4038-970c-f84a432cc54e.png)
 
 ## Prerequisites
-- OBS 32+ 64 bit (find older releases on GitHub for 29+ support)
+- OBS 33+ 64 bit on Windows, OBS 32+ 64 bit on Linux and macOS (find older releases on GitHub for 29+ support)
 - Windows 11
 - Linux
   - occasionally tested, but not regularly
@@ -66,18 +66,42 @@ to eventually synchronize things back to the main thread after loading was finis
 ### Installation
 Before installing make sure that OBS is not running.
 
-For portable mode on Windows simply extract the .7z file into the root directory of the portable folder structure. For regular OBS installations see the operating system specific instructions below.
+The folder structure of the Windows .7z file already matches the plugin location introduced in OBS Studio 33.0, so it can be extracted either into `C:\ProgramData\obs-studio` or - when using portable mode - into the root directory of the portable installation. For the other operating systems see the instructions below.
 
 <details>
 <summary>🟦 Windows</summary>
 
-For automatic installation just run the provided installer, then restart OBS.
+For automatic installation just run the provided installer, then restart OBS. It installs the plugin into `C:\ProgramData\obs-studio` and needs admin permissions.
 
-For manual installation extract the downloaded .7z file (= copy the contained obs-plugins and data folders) into the OBS Studio installation directory. The default location for this is
+For manual installation extract the downloaded .7z file (= copy the contained plugins folder) into `C:\ProgramData\obs-studio`, or into the root directory of your portable OBS Studio installation.
 
-`C:\Program Files\obs-studio`
+OBS Studio 33.0 unified the plugin locations. Third party plugins are loaded from a single shared folder of the machine (or from the root folder of a portable installation), no matter where OBS Studio itself is installed:
 
-This needs admin permissions.
+```
+Module   <location>\plugins\xObsAsyncImageSource\xObsAsyncImageSource.dll
+Data     <location>\plugins\xObsAsyncImageSource\data\*
+```
+
+`<location>` is either `C:\ProgramData\obs-studio` or the root directory of the portable OBS Studio installation. Note that portable launches ignore the ProgramData folder.
+
+<details>
+<summary>Legacy install locations (pre 33.0+)</summary>
+
+Previous versions of this plugin were installed into the OBS Studio program folder. OBS Studio still loads plugins from these locations, but flags them as **Legacy** and will not load them from OBS Studio 34.0 onwards:
+
+```
+Program Files:
+  Module   C:\Program Files\obs-studio\obs-plugins\64bit\xObsAsyncImageSource.dll
+  Data     C:\Program Files\obs-studio\data\obs-plugins\xObsAsyncImageSource\*
+
+ProgramData:
+  Module   C:\ProgramData\obs-studio\plugins\xObsAsyncImageSource\bin\64bit\xObsAsyncImageSource.dll
+  Data     C:\ProgramData\obs-studio\plugins\xObsAsyncImageSource\data\*
+```
+
+The installer cleans these up automatically. When installing manually, move the DLL and the PDB file out of the `64bit` folder into the plugin folder next to `data` and delete the old copies.
+
+</details>
 
 </details>
 
@@ -122,7 +146,7 @@ To uninstall, remove the manually installed files or run the separately provided
 
 </details>
 
-The steps to update an older version of the plugin to a newer version are the same, except that during file extraction you need to confirm overwriting existing files in addition.
+The steps to update an older version of the plugin to a newer version are the same, except that during file extraction you need to confirm overwriting existing files in addition. On Windows, an update of a version that was installed to one of the legacy locations is best done with the installer, because it removes the old files automatically - otherwise OBS Studio keeps flagging the plugin as Legacy.
 
 ### Settings
 

@@ -4,7 +4,7 @@ OBS plugin providing an image source that loads images asynchronously (causing a
 ![image](https://user-images.githubusercontent.com/528974/220008779-3075b81d-0883-4038-970c-f84a432cc54e.png)
 
 ## Prerequisites
-- OBS 33+ 64 bit on Windows, OBS 32+ 64 bit on Linux and macOS (find older releases on GitHub for 29+ support)
+- OBS 33+ 64 bit (find older releases on GitHub for 29+ support)
 - Windows 11
 - Linux
   - occasionally tested, but not regularly
